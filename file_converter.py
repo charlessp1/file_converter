@@ -4,6 +4,7 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from PIL import Image
 from moviepy import VideoFileClip, AudioFileClip
+from constants import FILE_EXTENSIONS, DIRECTORIES_TO_CLEAN
 
 # Image file paths
 img_not_converted = "C:/Users/Cess/Desktop/File Converter/Photos/Image converter"
@@ -17,8 +18,10 @@ vid_converted = "C:/Users/Cess/Desktop/File Converter/Videos/MP4 result"
 aud_not_converted = "C:/Users/Cess/Desktop/File Converter/Audios/Aud converter"
 aud_converted = "C:/Users/Cess/Desktop/File Converter/Audios/MP3 result"
 
+
 class FileHandler(FileSystemEventHandler):
     def on_created(self, event):
+        time.sleep(5)
         if event.is_directory:
             return
         file_path = event.src_path.replace("\\", "/")
@@ -26,23 +29,24 @@ class FileHandler(FileSystemEventHandler):
         name, file_type = os.path.splitext(file_name)
         file_type = file_type.lower()
 
-        if file_type in [".jpg", ".jpeg", ".gif", ".png", ".webp", ".bmp", ".svg", ".cr2", ".nef", ".dng", ".heic", ".heif", ".tif", ".tiff", ".cr3", ".nef", ".arw", ".avif"] and img_not_converted in file_path:
+        if file_type in FILE_EXTENSIONS["Images"] and img_not_converted in file_path:
             if file_type == ".jpg" or file_type == ".jpeg":
                 print("File is already in JPEG format")
                 return
             self.image_convert(file_path, f"converted_{name}")
 
-        elif file_type in [".mp4", ".mov", ".avi", ".mkv", ".wmv", ".m4v", ".mpg", ".mpeg", ".mts", ".m2ts", ".webm", ".flv", ".mxf"] and vid_not_converted in file_path:
+        elif file_type in FILE_EXTENSIONS["Videos"] and vid_not_converted in file_path:
             if file_type == ".mp4":
                 print("File is already in MP4 format")
                 return
             self.vid_convert(file_path, f"converted_{name}")
 
-        elif file_type in [".mp3", ".wav", ".flac", ".ogg", ".m4a", ".aiff", ".alac", ".aac", ".oga", ".mp4"] and aud_not_converted in file_path:
+        elif file_type in FILE_EXTENSIONS["Audios"] and aud_not_converted in file_path:
             if file_type == ".mp3":
                 print("File is already in MP3 format")
                 return
             self.aud_convert(file_path, f"converted_{name}")
+
         else:
             print(f"Unsupported file type: {file_type}")
 
@@ -62,8 +66,13 @@ class FileHandler(FileSystemEventHandler):
                 print(f"Fixing video dimensions of {name}")
                 width = width - (width % 2)
                 height = height - (height % 2)
-                clip = clip.resize(size=(width, height))
-            clip.write_videofile(converted_mp4, codec="libx264", audio_codec="aac", fps=clip.fps)
+                new_clip = clip.resize(size=(width, height))
+                new_clip.write_videofile(converted_mp4, codec="libx264", audio_codec="aac", fps=clip.fps, remove_temp=False)
+                new_clip.close()
+
+            else:
+                clip.write_videofile(converted_mp4, codec="libx264", audio_codec="aac", fps=clip.fps, remove_temp=False)
+                
         print(f"Successfully converted {name} to MP4!")
 
     def aud_convert(self, file_path, name):
@@ -76,12 +85,18 @@ class FileHandler(FileSystemEventHandler):
 if __name__ == "__main__":
     event_handler = FileHandler()
     observer = Observer()
-
     observer.schedule(event_handler, img_not_converted, recursive=False)
     observer.schedule(event_handler, vid_not_converted, recursive=False)
     observer.schedule(event_handler, aud_not_converted, recursive=False)
-
-    observer.start()
+    print("Initializing clean up for TEMP FILES...")
+    for directory in DIRECTORIES_TO_CLEAN:
+        for filename in os.listdir(directory):
+            if "TEMP_MPY" in filename:
+                full_path = os.path.join(directory, filename)
+                os.remove(full_path)
+                print(f"Cleaned up {filename}")
+    print("Clean up complete!")
+    observer.start()                       # watches the folders and looks for files to be converted
     print("Starting file converter")
 
     try:
@@ -94,12 +109,15 @@ if __name__ == "__main__":
             if ask_which.lower() == "images":
                 for images in os.listdir(img_not_converted):
                     os.remove(os.path.join(img_not_converted, images))
+
             elif ask_which.lower() == "videos":
                 for videos in os.listdir(vid_not_converted):
                     os.remove(os.path.join(vid_not_converted, videos))
+
             elif ask_which.lower() == "audios":
                 for audios in os.listdir(aud_not_converted):
                     os.remove(os.path.join(aud_not_converted, audios))
+
             elif ask_which.lower() == "all":
                 for images in os.listdir(img_not_converted):
                     os.remove(os.path.join(img_not_converted, images))
@@ -107,8 +125,10 @@ if __name__ == "__main__":
                     os.remove(os.path.join(vid_not_converted, videos))
                 for audios in os.listdir(aud_not_converted):
                     os.remove(os.path.join(aud_not_converted, audios))
+
             else:
-                print("Please enter a valid input: img/vid/aud.")
+                print("Please enter a valid input: img/vid/aud/all.")
+                
         observer.stop()
         print("Shutting down file converter...")
     observer.join()
