@@ -26,7 +26,7 @@ class FileHandler(FileSystemEventHandler):
         name, file_type = os.path.splitext(file_name)
         file_type = file_type.lower()
 
-        if file_type in [".png", ".webp", ".bmp", ".svg", ".cr2", ".nef", ".dng", ".heic", ".heif", ".tif", ".tiff", ".cr3", ".nef", ".arw", ".avif", ".gif"]:
+        if file_type in [".png", ".webp", ".bmp", ".svg", ".cr2", ".nef", ".dng", ".heic", ".heif", ".tif", ".tiff", ".cr3", ".nef", ".arw", ".avif"]:
             self.image_convert(file_path, f"converted_{name}")
 
         elif file_type in [".mov", ".gif", ".avi", ".mkv", ".wmv", ".m4v", ".mpg", ".mpeg", ".mts", ".m2ts", ".webm", ".flv", ".mxf"]:
@@ -38,15 +38,23 @@ class FileHandler(FileSystemEventHandler):
     def image_convert(self, file_path, name):
         time.sleep(1)
         converted_jpeg = os.path.join(img_converted, f"{name}.jpg")
-        with Image.open(file_path) as img:
-            img.convert("RGB").save(converted_jpeg)
+        with Image.open(file_path) as photo:
+            photo.convert("RGB").save(converted_jpeg)
         print(f"Successfully converted {name} to JPEG")
+
+    def vid_convert(self, file_path, name):
+        time.sleep(1)
+        converted_mp4 = os.path.join(vid_converted, f"{name}.mp4")
+        with VideoFileClip(file_path) as vid:
+            vid.write_videofile(converted_mp4, codec="libx264", audio_codec="aac", fps=vid.fps)
+        print(f"Successfully converted {name} to MP4")
 
 if __name__ == "__main__":
     event_handler = FileHandler()
     observer = Observer()
 
     observer.schedule(event_handler, img_not_converted, recursive=False)
+    observer.schedule(event_handler, vid_not_converted, recursive=False)
 
     observer.start()
     print("Starting file converter")
