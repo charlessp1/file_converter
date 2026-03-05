@@ -38,7 +38,7 @@ class FileHandler(FileSystemEventHandler):
                 return
             self.vid_convert(file_path, f"converted_{name}")
 
-        elif file_type in [".wav", ".flac", ".ogg", ".m4a", ".aiff", ".alac", ".aac", ".oga", ".mp4"] and aud_not_converted in file_path:
+        elif file_type in [".mp3", ".wav", ".flac", ".ogg", ".m4a", ".aiff", ".alac", ".aac", ".oga", ".mp4"] and aud_not_converted in file_path:
             if file_type == ".mp3":
                 print("File is already in MP3 format")
                 return
@@ -56,8 +56,14 @@ class FileHandler(FileSystemEventHandler):
     def vid_convert(self, file_path, name):
         time.sleep(1)
         converted_mp4 = os.path.join(vid_converted, f"{name}.mp4")
-        with VideoFileClip(file_path) as vid:
-            vid.write_videofile(converted_mp4, codec="libx264", audio_codec="aac", fps=vid.fps)
+        with VideoFileClip(file_path) as clip:
+            width, height = clip.size
+            if width % 2 !=0 or  height % 2 != 0:
+                print(f"Fixing video dimensions of {name}")
+                width = width - (width % 2)
+                height = height - (height % 2)
+                clip = clip.resize(size=(width, height))
+            clip.write_videofile(converted_mp4, codec="libx264", audio_codec="aac", fps=clip.fps)
         print(f"Successfully converted {name} to MP4!")
 
     def aud_convert(self, file_path, name):
@@ -84,8 +90,25 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         ask_delete = input("Would you like to delete the previous leftover file/s? (y/n): ")
         if ask_delete.lower() == "y":
-            for img in os.listdir(img_not_converted):
-                os.remove(os.path.join(img_not_converted, img))
+            ask_which = input("Which files would you like to delete? (images/videos/audios/all): ")
+            if ask_which.lower() == "images":
+                for images in os.listdir(img_not_converted):
+                    os.remove(os.path.join(img_not_converted, images))
+            elif ask_which.lower() == "videos":
+                for videos in os.listdir(vid_not_converted):
+                    os.remove(os.path.join(vid_not_converted, videos))
+            elif ask_which.lower() == "audios":
+                for audios in os.listdir(aud_not_converted):
+                    os.remove(os.path.join(aud_not_converted, audios))
+            elif ask_which.lower() == "all":
+                for images in os.listdir(img_not_converted):
+                    os.remove(os.path.join(img_not_converted, images))
+                for videos in os.listdir(vid_not_converted):
+                    os.remove(os.path.join(vid_not_converted, videos))
+                for audios in os.listdir(aud_not_converted):
+                    os.remove(os.path.join(aud_not_converted, audios))
+            else:
+                print("Please enter a valid input: img/vid/aud.")
         observer.stop()
         print("Shutting down file converter...")
     observer.join()
