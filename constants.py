@@ -7,7 +7,7 @@ FILE_EXTENSIONS = {
 }
 
 DIRECTORIES_TO_CLEAN = [
-        "C:/Users/Cess/Desktop/File Converter/Photos/jpeg result",
-        "C:/Users/Cess/Desktop/File Converter/Videos/MP4 result",
-        "C:/Users/Cess/Desktop/File Converter/Audios/MP3 result"
-    ]
+    "C:/Users/Cess/Desktop/File Converter/Photos/jpeg result",
+    "C:/Users/Cess/Desktop/File Converter/Videos/MP4 result",
+    "C:/Users/Cess/Desktop/File Converter/Audios/MP3 result"
+]
