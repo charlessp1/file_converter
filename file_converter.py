@@ -27,13 +27,13 @@ class FileHandler(FileSystemEventHandler):
         file_type = file_type.lower()
 
         if file_type in [".png", ".webp", ".bmp", ".svg", ".cr2", ".nef", ".dng", ".heic", ".heif", ".tif", ".tiff", ".cr3", ".nef", ".arw", ".avif", ".gif"]:
-            self.image_convert(file_path, name)
+            self.image_convert(file_path, f"converted_{name}")
 
         elif file_type in [".mov", ".gif", ".avi", ".mkv", ".wmv", ".m4v", ".mpg", ".mpeg", ".mts", ".m2ts", ".webm", ".flv", ".mxf"]:
-            self.vid_convert(file_path, name)
+            self.vid_convert(file_path, f"converted_{name}")
 
         elif file_type in [".wav", ".flac", ".ogg", ".m4a", ".aiff", ".alac", ".aac", ""]:
-            self.aud_convert(file_path, name)
+            self.aud_convert(file_path, f"converted_{name}")
 
     def image_convert(self, file_path, name):
         time.sleep(1)
@@ -55,7 +55,11 @@ if __name__ == "__main__":
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
+        ask_delete = input("Would you like to delete the previous leftover file/s? (y/n): ")
+        if ask_delete.lower() == "y":
+            for img in os.listdir(img_not_converted):
+                os.remove(os.path.join(img_not_converted, img))
         observer.stop()
-        print("Cancelling file converter...")
+        print("Shutting down file converter...")
     observer.join()
-    print("File converter cancelled")
+    print("File converter shut down")
