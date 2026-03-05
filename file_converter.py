@@ -27,13 +27,13 @@ class FileHandler(FileSystemEventHandler):
         file_type = file_type.lower()
 
         if file_type in [".png", ".webp", ".bmp", ".svg", ".cr2", ".nef", ".dng", ".heic", ".heif", ".tif", ".tiff", ".cr3", ".nef", ".arw", ".avif", ".gif"]:
-            self.image_convert(file_path, file_name)
+            self.image_convert(file_path, name)
 
         elif file_type in [".mov", ".gif", ".avi", ".mkv", ".wmv", ".m4v", ".mpg", ".mpeg", ".mts", ".m2ts", ".webm", ".flv", ".mxf"]:
-            self.vid_convert(file_path, file_name)
+            self.vid_convert(file_path, name)
 
         elif file_type in [".wav", ".flac", ".ogg", ".m4a", ".aiff", ".alac", ".aac", ""]:
-            self.aud_convert(file_path, file_name)
+            self.aud_convert(file_path, name)
 
     def image_convert(self, file_path, name):
         time.sleep(1)
@@ -50,3 +50,12 @@ if __name__ == "__main__":
 
     observer.start()
     print("Starting file converter")
+
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        observer.stop()
+        print("Cancelling file converter...")
+    observer.join()
+    print("File converter cancelled")
