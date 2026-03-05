@@ -21,33 +21,51 @@ class FileHandler(FileSystemEventHandler):
     def on_created(self, event):
         if event.is_directory:
             return
-        file_path = event.src_path
+        file_path = event.src_path.replace("\\", "/")
         file_name = os.path.basename(file_path)
         name, file_type = os.path.splitext(file_name)
         file_type = file_type.lower()
 
-        if file_type in [".png", ".webp", ".bmp", ".svg", ".cr2", ".nef", ".dng", ".heic", ".heif", ".tif", ".tiff", ".cr3", ".nef", ".arw", ".avif"]:
+        if file_type in [".jpg", ".jpeg", ".gif", ".png", ".webp", ".bmp", ".svg", ".cr2", ".nef", ".dng", ".heic", ".heif", ".tif", ".tiff", ".cr3", ".nef", ".arw", ".avif"] and img_not_converted in file_path:
+            if file_type == ".jpg" or file_type == ".jpeg":
+                print("File is already in JPEG format")
+                return
             self.image_convert(file_path, f"converted_{name}")
 
-        elif file_type in [".mov", ".gif", ".avi", ".mkv", ".wmv", ".m4v", ".mpg", ".mpeg", ".mts", ".m2ts", ".webm", ".flv", ".mxf"]:
+        elif file_type in [".mp4", ".mov", ".avi", ".mkv", ".wmv", ".m4v", ".mpg", ".mpeg", ".mts", ".m2ts", ".webm", ".flv", ".mxf"] and vid_not_converted in file_path:
+            if file_type == ".mp4":
+                print("File is already in MP4 format")
+                return
             self.vid_convert(file_path, f"converted_{name}")
 
-        elif file_type in [".wav", ".flac", ".ogg", ".m4a", ".aiff", ".alac", ".aac", ""]:
+        elif file_type in [".wav", ".flac", ".ogg", ".m4a", ".aiff", ".alac", ".aac", ".oga", ".mp4"] and aud_not_converted in file_path:
+            if file_type == ".mp3":
+                print("File is already in MP3 format")
+                return
             self.aud_convert(file_path, f"converted_{name}")
+        else:
+            print(f"Unsupported file type: {file_type}")
 
     def image_convert(self, file_path, name):
         time.sleep(1)
         converted_jpeg = os.path.join(img_converted, f"{name}.jpg")
         with Image.open(file_path) as photo:
             photo.convert("RGB").save(converted_jpeg)
-        print(f"Successfully converted {name} to JPEG")
+        print(f"Successfully converted {name} to JPEG!")
 
     def vid_convert(self, file_path, name):
         time.sleep(1)
         converted_mp4 = os.path.join(vid_converted, f"{name}.mp4")
         with VideoFileClip(file_path) as vid:
             vid.write_videofile(converted_mp4, codec="libx264", audio_codec="aac", fps=vid.fps)
-        print(f"Successfully converted {name} to MP4")
+        print(f"Successfully converted {name} to MP4!")
+
+    def aud_convert(self, file_path, name):
+        time.sleep(1)
+        converted_mp3 = os.path.join(aud_converted, f"{name}.mp3")
+        with AudioFileClip(file_path) as audio:
+            audio.write_audiofile(converted_mp3)
+        print(f"Successfully converted {name} to MP3!")
 
 if __name__ == "__main__":
     event_handler = FileHandler()
@@ -55,6 +73,7 @@ if __name__ == "__main__":
 
     observer.schedule(event_handler, img_not_converted, recursive=False)
     observer.schedule(event_handler, vid_not_converted, recursive=False)
+    observer.schedule(event_handler, aud_not_converted, recursive=False)
 
     observer.start()
     print("Starting file converter")
